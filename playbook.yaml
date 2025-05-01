@@ -5,6 +5,10 @@
     ansible_python_interpreter: /usr/bin/python3
     app_env: "{{ lookup('aws_ssm', '{{ ssm_path }}laravel_env', bypath=true, shortnames=true, decrypt=true, recursive=true, region='eu-west-2') }}"
     app_directory: "{{ lookup('aws_ssm', '{{ ssm_path }}app_directory', region='eu-west-2') }}"
+    app_user: "{{ lookup('aws_ssm', '{{ ssm_path }}user', region='eu-west-2') }}"
+    app_group: "{{ lookup('aws_ssm', '{{ ssm_path }}group', region='eu-west-2') }}"
+    efs_dns: "{{ lookup('aws_ssm', '{{ ssm_path }}efs', region='eu-west-2') }}"
+    ami_id: "{{ lookup('aws_ssm', '{{ ssm_path }}ami_id', region='eu-west-2') }}"
 
   tasks:
     - name: Build env file
@@ -21,12 +25,7 @@
         path: "{{app_directory}}/.env"
         regex: "^APP_DEBUG="
         line: "APP_DEBUG=false"
-      when: project_env == "production"
-
-    - name: Run artisan migrate
-      shell: 'php artisan migrate --force --isolated'
-      args:
-        chdir: "{{ app_directory }}"
+      when: app_env == "production"
 
     - name: Limit amazon-cloudwatch-agent CPU
       no_log: True
@@ -49,3 +48,38 @@
         name: supervisor
         enabled: yes
 
+    - name: Chown all files/directories to app user/group
+      ansible.builtin.file:
+        path: "{{ app_directory }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        recurse: "yes"
+
+    - name: Mount EFS and Add to FSTAB
+      mount:
+        src: "{{ efs_dns }}:/"
+        path: "{{ app_directory }}/storage"
+        state: mounted
+        fstype: nfs
+      register: result
+      until: result is not failed
+      retries: 5
+      delay: 5
+    
+    - name: Wait for EC2 to be available
+      wait_for_connection:
+
+    - amazon.aws.ec2_metadata_facts:
+
+    - name: Run Craft migrations
+      shell: 'php craft migrate/all'
+      args:
+        chdir: "{{ app_directory }}"
+      when: ansible_ec2_ami_id != ami_id
+
+    
+    - name: Apply project config
+      shell: 'php craft project-config/apply'
+      args:
+        chdir: "{{ app_directory }}"
+      when: ansible_ec2_ami_id != ami_id
