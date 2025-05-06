@@ -8,7 +8,7 @@
     app_user: "{{ lookup('aws_ssm', '{{ ssm_path }}user', region='eu-west-2') }}"
     app_group: "{{ lookup('aws_ssm', '{{ ssm_path }}group', region='eu-west-2') }}"
     efs_dns: "{{ lookup('aws_ssm', '{{ ssm_path }}efs', region='eu-west-2') }}"
-    ami_id: "{{ lookup('aws_ssm', '{{ ssm_path }}ami_id', region='eu-west-2') }}"
+    ami_id: "{{ lookup('aws_ssm', '{{ ssm_path }}asg_ami_id', region='eu-west-2') }}"
 
   tasks:
     - name: Build env file
