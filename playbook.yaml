@@ -65,21 +65,19 @@
       until: result is not failed
       retries: 5
       delay: 5
-    
-    - name: Wait for EC2 to be available
-      wait_for_connection:
 
-    - amazon.aws.ec2_metadata_facts:
+    - name: Get EC2 AMI
+      shell: 'curl http://169.254.169.254/latest/meta-data/ami-id'
+      register: ami_ec2
 
     - name: Run Craft migrations
       shell: 'php craft migrate/all'
       args:
         chdir: "{{ app_directory }}"
-      when: ansible_ec2_ami_id != ami_id
-
+      when: ami_ec2.stdout != ami_id
     
     - name: Apply project config
       shell: 'php craft project-config/apply'
       args:
         chdir: "{{ app_directory }}"
-      when: ansible_ec2_ami_id != ami_id
+      when: ami_ec2.stdout != ami_id
