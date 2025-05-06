@@ -69,6 +69,13 @@
     - name: Get EC2 AMI
       shell: 'curl http://169.254.169.254/latest/meta-data/ami-id'
       register: ami_ec2
+    
+
+    - debug:
+        msg: 
+          - "EC2 Current AMI: {{ ami_ec2.stdout }}"
+          - "ASG Stored AMI: {{ ami_id }}"
+
 
     - name: Run Craft migrations
       shell: 'php craft migrate/all'
