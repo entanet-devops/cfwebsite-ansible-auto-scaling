@@ -70,11 +70,12 @@
       shell: 'curl http://169.254.169.254/latest/meta-data/ami-id'
       register: ami_ec2
     
-    - name: Show AMI versions
-      debug:
-        msg: |
-          EC2 Current AMI: {{ ami_ec2.content }}
-          ASG Stored AMI: {{ ami_id }}
+
+    - debug:
+        msg: 
+          - "EC2 Current AMI: {{ ami_ec2.stdout }}"
+          - "ASG Stored AMI: {{ ami_id }}"
+          - "EC2 Current AMI: {{ ami_ec2.content }}"
 
 
     - name: Run Craft migrations
