@@ -69,6 +69,12 @@
     - name: Get EC2 AMI
       shell: 'curl http://169.254.169.254/latest/meta-data/ami-id'
       register: ami_ec2
+      debug:
+        msg: "EC2 AMI Version: {{ ami_ec2 }}"
+    
+    - name: Print AMI SSM Version
+      debug:
+        msg: "ASG AMI Version: {{ ami_id }}"
 
     - name: Run Craft migrations
       shell: 'php craft migrate/all'
