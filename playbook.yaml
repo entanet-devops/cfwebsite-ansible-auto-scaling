@@ -75,7 +75,6 @@
         msg: 
           - "EC2 Current AMI: {{ ami_ec2.stdout }}"
           - "ASG Stored AMI: {{ ami_id }}"
-          - "EC2 Current AMI: {{ ami_ec2.content }}"
 
 
     - name: Run Craft migrations
