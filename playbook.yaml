@@ -66,16 +66,17 @@
       retries: 5
       delay: 5
 
+    - name: Wait for FPM socket to become available
+      shell: "bash -c \"for ((i=0; i<10; ++i)); do [ -e /run/php/php?.?-fpm.sock ] && break; sleep 5; done; file /run/php/php?.?-fpm.sock\""
+
     - name: Get EC2 AMI
       shell: 'curl http://169.254.169.254/latest/meta-data/ami-id'
       register: ami_ec2
     
-
     - debug:
         msg: 
           - "EC2 Current AMI: {{ ami_ec2.stdout }}"
           - "ASG Stored AMI: {{ ami_id }}"
-
 
     - name: Run Craft migrations
       shell: 'php craft migrate/all'
